@@ -7,10 +7,10 @@
 
 import Foundation
 
-struct Message {
-    let id: String = UUID().uuidString
+struct Message: Decodable, Identifiable {
+    let id: String
     let text: String
     let user: User
-    let date: Date
+    let date: String
     let readed: Bool
 }

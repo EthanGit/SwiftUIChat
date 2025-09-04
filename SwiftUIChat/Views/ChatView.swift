@@ -10,6 +10,9 @@ import SwiftUI
 struct ChatView: View {
     
     @State private var textFieldText: String = ""
+    @FocusState private var textFieldFocused: Bool
+    
+    @StateObject var vm = ChatViewModel()
     
     var body: some View {
         VStack(spacing: 0) {
@@ -32,16 +35,27 @@ struct ChatView: View {
 extension ChatView {
     
     private var messageArea: some View {
-        ScrollView {
-            VStack(spacing: 0) {
-                ForEach(0..<15) { _ in
-                    MessageRow()
+        ScrollViewReader { proxy in
+            ScrollView {
+                VStack(spacing: 0) {
+                    ForEach(vm.messages) { message in
+                        MessageRow(message: message)
+                    }
+                }
+                .padding(.horizontal)
+                .padding(.top, 72)
+            }
+            .background(Color("Background"))
+            .onTapGesture {
+                textFieldFocused = false
+            }
+            .onAppear {
+                Task {
+                    await Task.delayed(by: 1.0)
+                    scrollToLast(proxy: proxy)
                 }
             }
-            .padding(.horizontal)
-            .padding(.top, 72)
         }
-        .background(.cyan)
     }
     
     private var inputArea: some View {
@@ -63,11 +77,16 @@ extension ChatView {
                         .foregroundStyle(.gray)
                     , alignment: .trailing
                 )
+                .onSubmit {
+                    sendMessage()
+                }
+                .focused($textFieldFocused)
             Image(systemName: "mic")
                 .font(.title2)
         }
-        .padding()
-        .background(.white)
+        .padding(.horizontal)
+        .padding(.vertical, 8)
+        .background(Color(uiColor: .systemBackground))
     }
     
     private var navigationArea: some View {
@@ -85,6 +104,25 @@ extension ChatView {
             .font(.title2)
         }
         .padding()
-        .background(.cyan.opacity(0.9))
+        .background(Color("Background").opacity(0.9))
+    }
+    
+    private func sendMessage() {
+        if textFieldText.isEmpty { return }
+        vm.addMessage(text: textFieldText)
+        textFieldText = ""
+    }
+    
+    private func scrollToLast(proxy: ScrollViewProxy) {
+        if let lastMessage = vm.messages.last {
+            proxy.scrollTo(lastMessage.id, anchor: .bottom)
+        }
+    }
+}
+
+extension Task where Success == Never, Failure == Never {
+    static func delayed(by timeInterval: TimeInterval) async {
+        let nanoseconds = UInt64(timeInterval * 1_000_000_000)
+        try? await Task.sleep(nanoseconds: nanoseconds)
     }
 }
