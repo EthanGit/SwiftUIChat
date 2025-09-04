@@ -1,8 +1,8 @@
 //
 //  ChatView.swift
-//  ChatApp_SwiftUI
+//  SwiftUIChat
 //
-//  Created by Ethan Lin on 2025/8/28.
+//  Created by Ethan Lin on 2025/9/3.
 //
 
 import SwiftUI
