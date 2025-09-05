@@ -56,4 +56,45 @@ class ChatViewModel: ObservableObject {
         chatData[index].messages.append(newMessage)
     }
     
+    func getTitle(messages: [Message]) -> String {
+        var title = ""
+        let names = getMembers(messages: messages, type: .name)
+        
+        for name in names {
+            title += title.isEmpty ? name : ", \(name)"
+        }
+        
+        return title
+    }
+    
+    func getImages(messages: [Message]) -> [String] {
+        getMembers(messages: messages, type: .image)
+    }
+    
+    private func getMembers(messages: [Message], type: ValueType) -> [String] {
+        var members: [String] = []
+        var userIds: [String] = []
+        
+        for message in messages {
+            let id = message.user.id
+            if id == User.currentUser.id { continue }
+            if userIds.contains(id) { continue }
+            userIds.append(id)
+            
+            switch type {
+            case .name:
+                members.append(message.user.name)
+            case .image:
+                members.append(message.user.image)
+            }
+        }
+        
+        return members
+    }
+    
+}
+
+enum ValueType {
+    case name
+    case image
 }
