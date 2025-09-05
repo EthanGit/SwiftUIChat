@@ -9,10 +9,14 @@ import SwiftUI
 
 struct ChatView: View {
     
+    let chat: Chat
+    
     @State private var textFieldText: String = ""
     @FocusState private var textFieldFocused: Bool
+    @Environment(\.dismiss) private var dismiss
     
-    @StateObject var vm = ChatViewModel()
+    @EnvironmentObject var vm: ChatViewModel
+//    @ObservedObject var vm = ChatViewModel()
     
     var body: some View {
         VStack(spacing: 0) {
@@ -28,9 +32,9 @@ struct ChatView: View {
     }
 }
 
-#Preview {
-    ChatView()
-}
+//#Preview {
+//    ChatView()
+//}
 
 extension ChatView {
     
@@ -38,7 +42,7 @@ extension ChatView {
         ScrollViewReader { proxy in
             ScrollView {
                 VStack(spacing: 0) {
-                    ForEach(vm.messages) { message in
+                    ForEach(chat.messages) { message in
                         MessageRow(message: message)
                     }
                 }
@@ -50,10 +54,7 @@ extension ChatView {
                 textFieldFocused = false
             }
             .onAppear {
-                Task {
-                    await Task.delayed(by: 1.0)
-                    scrollToLast(proxy: proxy)
-                }
+                scrollToLast(proxy: proxy)
             }
         }
     }
@@ -91,8 +92,13 @@ extension ChatView {
     
     private var navigationArea: some View {
         HStack {
-            Image(systemName: "chevron.backward")
-                .font(.title2)
+            Button {
+                dismiss()
+            } label: {
+                Image(systemName: "chevron.backward")
+                    .font(.title2)
+                    .foregroundColor(.primary)
+            }
             Text("Title")
                 .font(.title2.bold())
             Spacer()
@@ -109,12 +115,12 @@ extension ChatView {
     
     private func sendMessage() {
         if textFieldText.isEmpty { return }
-        vm.addMessage(text: textFieldText)
+        vm.addMessage(chatId: chat.id, text: textFieldText)
         textFieldText = ""
     }
     
     private func scrollToLast(proxy: ScrollViewProxy) {
-        if let lastMessage = vm.messages.last {
+        if let lastMessage = chat.messages.last {
             proxy.scrollTo(lastMessage.id, anchor: .bottom)
         }
     }
